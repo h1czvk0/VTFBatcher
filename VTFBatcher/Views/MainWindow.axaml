@@ -1,0 +1,204 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VTFBatcher.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="using:VTFBatcher.Converters"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:Class="VTFBatcher.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="VTFBatcher">
+
+    <Window.Resources>
+        <converters:PascalCaseHumanizeConverter x:Key="PascalCaseHumanizeConverter" />
+        <converters:AndConverter x:Key="AndConverter" />
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="TextBlock:disabled">
+            <Setter Property="Foreground" Value="Gray" />
+        </Style>
+    </Window.Styles>
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <DockPanel>
+        <Grid ColumnDefinitions="*,Auto,*">
+            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4" Margin="5">
+                <ListBox Name="PicturePathListBox" HorizontalAlignment="Stretch"
+                         VerticalAlignment="Stretch"
+                         ItemsSource="{Binding PicturePaths}"
+                         SelectionMode="Multiple"
+                         KeyDown="PicturePathListBox_DeleteKeyDown"
+                         DragDrop.AllowDrop="True"
+                         DragDrop.DragOver="PicturePathListBox_OnDragOver"
+                         DragDrop.Drop="PicturePathListBox_OnDrop"
+                         Margin="10">
+                </ListBox>
+            </Border>
+            <GridSplitter Grid.Column="1" />
+            <StackPanel Grid.Column="2">
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10" Margin="5">
+                    <StackPanel Grid.ColumnSpan="2" Name="NormalSettingsPanel">
+                        <TextBlock Text="Normal:" FontWeight="SemiBold" Margin="2,0,0,0" VerticalAlignment="Center" />
+                        <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4">
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="4">
+                                <TextBlock Text="Normal Format:" HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center" />
+                                <ComboBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding ImageFormats}"
+                                          SelectedIndex="{Binding SelectedNormalFormatIndex}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Alpha Format:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center" />
+                                <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding ImageFormats}"
+                                          SelectedIndex="{Binding SelectedAlphaFormatIndex}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="0">
+                        <TextBlock Text="Resize:" FontWeight="SemiBold" Margin="2,0,0,0" VerticalAlignment="Center" />
+                        <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4">
+                            <Grid ColumnDefinitions="*,*"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                                  RowSpacing="4">
+                                <CheckBox IsChecked="{Binding IfResize}">
+                                    Resize
+                                </CheckBox>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Resize Method:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center"
+                                           IsEnabled="{Binding IfResize}" />
+                                <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding ResizeMethods}"
+                                          SelectedIndex="{Binding SelectedResizeMethodIndex}"
+                                          IsEnabled="{Binding IfResize}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                Text="{Binding Converter={StaticResource PascalCaseHumanizeConverter}}">
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Resize Filter:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center"
+                                           IsEnabled="{Binding IfResize}" />
+                                <ComboBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding ResizeFilters}"
+                                          SelectedIndex="{Binding SelectedResizeFilterIndex}"
+                                          IsEnabled="{Binding IfResize}" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Sharpen Filter:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center"
+                                           IsEnabled="{Binding IfResize}" />
+                                <ComboBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding SharpenFilters}"
+                                          SelectedIndex="{Binding SelectedResizeSharpenFilterIndex}"
+                                          IsEnabled="{Binding IfResize}" />
+
+                                <CheckBox Grid.Row="4" Grid.Column="0" IsChecked="{Binding IfClamp}" Margin="0,5,0,0"
+                                          IsEnabled="{Binding IfResize}">
+                                    Clamp
+                                </CheckBox>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Maximum Width:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource AndConverter}">
+                                            <Binding Path="IfClamp" />
+                                            <Binding Path="IfResize" />
+                                        </MultiBinding>
+                                    </TextBlock.IsEnabled>
+                                </TextBlock>
+                                <ComboBox Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding ClampSizes}"
+                                          SelectedIndex="{Binding SelectedMaximumWidthIndex}">
+                                    <ComboBox.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource AndConverter}">
+                                            <Binding Path="IfClamp" />
+                                            <Binding Path="IfResize" />
+                                        </MultiBinding>
+                                    </ComboBox.IsEnabled>
+                                </ComboBox>
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Maximum Height:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource AndConverter}">
+                                            <Binding Path="IfClamp" />
+                                            <Binding Path="IfResize" />
+                                        </MultiBinding>
+                                    </TextBlock.IsEnabled>
+                                </TextBlock>
+                                <ComboBox Grid.Row="6" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding ClampSizes}"
+                                          SelectedIndex="{Binding SelectedMaximumHeightIndex}">
+                                    <ComboBox.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource AndConverter}">
+                                            <Binding Path="IfClamp" />
+                                            <Binding Path="IfResize" />
+                                        </MultiBinding>
+                                    </ComboBox.IsEnabled>
+                                </ComboBox>
+
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="0" Name="MipmapSettingsPanel">
+                        <TextBlock Text="Mipmap:" FontWeight="SemiBold" Margin="2,0,0,0" VerticalAlignment="Center" />
+                        <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4">
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+                                <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding IfGenerateMipmaps}">
+                                    Generate Mipmaps
+                                </CheckBox>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Mipmap Filter:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center"
+                                           IsEnabled="{Binding IfGenerateMipmaps}" />
+                                <ComboBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding ResizeFilters}"
+                                          SelectedIndex="{Binding SelectedMipmapFilterIndex}"
+                                          IsEnabled="{Binding IfGenerateMipmaps}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Sharpen Filter:"
+                                           HorizontalAlignment="Stretch"
+                                           VerticalAlignment="Center"
+                                           IsEnabled="{Binding IfGenerateMipmaps}" />
+                                <ComboBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding SharpenFilters}"
+                                          SelectedIndex="{Binding SelectedMipmapSharpenFilterIndex}"
+                                          IsEnabled="{Binding IfGenerateMipmaps}" />
+
+                            </Grid>
+                        </Border>
+                        <Grid ColumnDefinitions="*,*">
+                            <TextBlock Text="VTF Version:" VerticalAlignment="Center" Margin="4,5,0,0" FontWeight="SemiBold"/>
+                            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" Margin="0,5,0,0"
+                                      ItemsSource="{Binding VTFVersions}" SelectedItem="{Binding Version}"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto,Auto" Margin="5" ColumnSpacing="5">
+                    <TextBox Grid.Column="0" HorizontalAlignment="Stretch" Text="{Binding OutputDirectory}"></TextBox>
+                    <Button Grid.Column="1" Content="Select Output Dir" HorizontalAlignment="Right" Command="{Binding SelectOutputDirectoryCommand}"/>
+                    <Button Grid.Column="2" Content="Open Dir" Command="{Binding OpenOutputDirectoryCommand}" />
+                </Grid>
+                <Button Content="Convert" Command="{Binding StartConvertCommand}" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>
