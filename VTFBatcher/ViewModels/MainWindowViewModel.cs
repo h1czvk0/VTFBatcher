@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -128,6 +129,29 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task OpenOutputDirectoryAsync()
     {
         await OpenDirectoryAsync(OutputDirectory);
+    }
+    
+    [RelayCommand]
+    private async Task OpenItemsDirectoryAsync(IList? paths)
+    {
+        if (paths is null || paths.Count == 0) return;
+
+        foreach (var path in paths.Cast<string>())
+        {
+            OpenDirectoryAsync(Path.GetDirectoryName(path));
+        }
+    }
+    
+    [RelayCommand]
+    private async Task DeleteSelectedItemsAsync(IList? paths)
+    {
+        if (paths is null || paths.Count == 0) return;
+
+        var toRemove = paths.Cast<string>().ToList();
+        foreach (var path in toRemove)
+        {
+            PicturePaths.Remove(path);
+        }
     }
 
     private async Task OpenDirectoryAsync(string path)
