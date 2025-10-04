@@ -21,6 +21,10 @@
             <Setter Property="Foreground" Value="Gray" />
         </Style>
 
+        <Style Selector="Expander">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
         <Style Selector="ListBox#PicturePathListBox">
             <Setter Property="ContextMenu">
                 <ContextMenu>
@@ -68,7 +72,7 @@
                                          IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=None}"
                                          Content="None"
                                          IsEnabled="{Binding PresetAvailable}" />
-                            <Expander Header="Character VGUI">
+                            <Expander  Header="Character VGUI" >
                                 <StackPanel IsEnabled="{Binding PresetAvailable}">
                                     <CheckBox Content="Nick" IsChecked="{Binding PresetNick, Mode=TwoWay}" />
                                     <CheckBox Content="Ellis" IsChecked="{Binding PresetEllis}" />

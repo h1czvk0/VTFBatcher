@@ -57,7 +57,7 @@ public partial class MainWindowViewModel : ViewModelBase
     // ReSharper disable once InconsistentNaming
     [ObservableProperty] private static List<string> _VTFVersions = new() { "7.4", "7.3", "7.2", "7.1", "7.0" };
 
-    [ObservableProperty] private string _version = _VTFVersions[0];
+    [ObservableProperty] private string _version = _VTFVersions[2];
 
     [ObservableProperty] private bool _presetAvailable = false;
     [ObservableProperty] private PresetEnum _selectedPreset = PresetEnum.None;

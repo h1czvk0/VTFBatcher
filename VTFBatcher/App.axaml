@@ -3,13 +3,22 @@
              x:Class="VTFBatcher.App"
              xmlns:local="using:VTFBatcher"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
-        <local:ViewLocator/>
+        <local:ViewLocator />
     </Application.DataTemplates>
-  
+
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" RegionColor="#2b2d30" />
+            </FluentTheme.Palettes>
+            <FluentTheme.Resources>
+                <SolidColorBrush x:Key="ExpanderHeaderBackground" Color="Transparent" />
+                <SolidColorBrush x:Key="ExpanderHeaderBackgroundPointerOver" Color="Transparent" />
+                <SolidColorBrush x:Key="ExpanderHeaderBackgroundPressed" Color="Transparent" />
+            </FluentTheme.Resources>
+        </FluentTheme>
     </Application.Styles>
 </Application>
