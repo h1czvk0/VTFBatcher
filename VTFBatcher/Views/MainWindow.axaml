@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="using:VTFBatcher.Converters"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
         x:Class="VTFBatcher.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -13,13 +13,14 @@
     <Window.Resources>
         <converters:PascalCaseHumanizeConverter x:Key="PascalCaseHumanizeConverter" />
         <converters:AndConverter x:Key="AndConverter" />
+        <converters:StringEnumConverter x:Key="EnumConverter" />
     </Window.Resources>
 
     <Window.Styles>
         <Style Selector="TextBlock:disabled">
             <Setter Property="Foreground" Value="Gray" />
         </Style>
-        
+
         <Style Selector="ListBox#PicturePathListBox">
             <Setter Property="ContextMenu">
                 <ContextMenu>
@@ -36,7 +37,7 @@
         <Style Selector="ListBox#PicturePathListBox:empty">
             <Setter Property="ContextMenu" Value="{x:Null}" />
         </Style>
-        
+
     </Window.Styles>
 
     <Design.DataContext>
@@ -46,13 +47,67 @@
     </Design.DataContext>
 
     <DockPanel>
-        <Grid ColumnDefinitions="*,Auto,*">
-            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4" Margin="5">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="Import Directory" Command="{Binding SelectInputDirectoryCommand}"></MenuItem>
+                <MenuItem Header="Import Files" Command="{Binding SelectInputFilesCommand}"></MenuItem>
+                <Separator/>
+                <MenuItem Header="Clear" Command="{Binding ClearAllItemsCommand}"></MenuItem>
+                <MenuItem Header="Reset Presets" Command="{Binding ResetPresetsCommand}"></MenuItem>
+            </MenuItem>
+        </Menu>
+
+
+        <Grid ColumnDefinitions="Auto,Auto,*,Auto,*">
+            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4" Margin="5">            <!-- <ToggleButton Height="60" Content=">" VerticalContentAlignment="Center"></ToggleButton> -->
+                <Grid RowDefinitions="Auto, Auto">
+                    <TextBlock Grid.Row="0" Text="Preset:" Margin="10,5,5,5" FontSize="15" FontWeight="SemiBold"></TextBlock>
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel Name="PresetPanel" Spacing="5" Margin="10">
+                            <RadioButton GroupName="PresetOption"
+                                         IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=None}"
+                                         Content="None"
+                                         IsEnabled="{Binding PresetAvailable}" />
+                            <Expander Header="Character VGUI">
+                                <StackPanel IsEnabled="{Binding PresetAvailable}">
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Nick}"
+                                                 Content="Nick" />
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Ellis}"
+                                                 Content="Ellis" />
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Rochelle}"
+                                                 Content="Rochelle" />
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Coach}"
+                                                 Content="Coach" />
+                                    <Separator HorizontalAlignment="Stretch" />
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Bill}"
+                                                 Content="Bill" />
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Louis}"
+                                                 Content="Louis" />
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Zoey}"
+                                                 Content="Zoey" />
+                                    <RadioButton GroupName="PresetOption"
+                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Francis}"
+                                                 Content="Francis" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+            <Border Grid.Column="2" BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Padding="4" Margin="5">
                 <ListBox Name="PicturePathListBox" HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch"
                          ItemsSource="{Binding PicturePaths}"
                          SelectionMode="Multiple"
                          KeyDown="PicturePathListBox_DeleteKeyDown"
+                         SelectionChanged="PicturePathListBox_OnSelectionChanged"
                          DragDrop.AllowDrop="True"
                          DragDrop.DragOver="PicturePathListBox_OnDragOver"
                          DragDrop.Drop="PicturePathListBox_OnDrop"
@@ -67,8 +122,8 @@
                     <!-- </ListBox.ContextMenu> -->
                 </ListBox>
             </Border>
-            <GridSplitter Grid.Column="1" />
-            <ScrollViewer Grid.Column="2">
+            <GridSplitter Grid.Column="3" />
+            <ScrollViewer Grid.Column="4">
                 <StackPanel>
                     <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10" Margin="5">
                         <StackPanel Grid.ColumnSpan="2" Name="NormalSettingsPanel">

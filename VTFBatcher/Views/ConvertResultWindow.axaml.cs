@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 
 namespace VTFBatcher.Views;
 
@@ -27,6 +28,7 @@ public partial class ConvertResultWindow : Window
                 var textBlock = new TextBlock
                 {
                     Text = error.Value,
+                    TextWrapping = TextWrapping.Wrap,
                 };
 
                 expander.Content = textBlock;

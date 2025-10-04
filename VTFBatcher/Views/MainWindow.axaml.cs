@@ -1,11 +1,16 @@
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using System.Linq;
+using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using VTFBatcher.Enums;
 using VTFBatcher.ViewModels;
 
 namespace VTFBatcher.Views;
@@ -128,9 +133,13 @@ public partial class MainWindow : Window
         if (PicturePathListBox.SelectedItems.Count <= 0 || DataContext is not MainWindowViewModel vm) return;
 
         var selectedItems = PicturePathListBox.SelectedItems.Cast<string>().ToList();
-        foreach (var item in selectedItems)
-        {
-            vm.PicturePaths.Remove(item);
-        }
+        vm.DeleteSelectedItemsCommand.Execute(selectedItems);
+    }
+
+    private void PicturePathListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        if (sender is not ListBox listBox) return;
+        vm.SelectedPicturePath = new List<string>(listBox.SelectedItems.Cast<string>());
     }
 }

@@ -3,12 +3,16 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VTFBatcher.Models;
@@ -20,6 +24,8 @@ namespace VTFBatcher.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     [ObservableProperty] private ObservableCollection<string> _picturePaths = new();
+    [ObservableProperty] private List<string> _selectedPicturePath = new();
+
     public Array ImageFormats => Enum.GetValues(typeof(ImageFormatEnum));
     [ObservableProperty] private int _selectedNormalFormatIndex = 0;
     [ObservableProperty] private int _selectedAlphaFormatIndex = 0;
@@ -47,9 +53,47 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty] private string _outputDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Output");
 
-    [ObservableProperty] public static List<string> _VTFVersions = new() { "7.4", "7.3", "7.2", "7.1", "7.0" };
+    // ReSharper disable once InconsistentNaming
+    [ObservableProperty] private static List<string> _VTFVersions = new() { "7.4", "7.3", "7.2", "7.1", "7.0" };
 
     [ObservableProperty] private string _version = _VTFVersions[0];
+
+    [ObservableProperty] private bool _presetAvailable = false;
+    [ObservableProperty] private PresetEnum _selectedPreset = PresetEnum.None;
+    [ObservableProperty] private Dictionary<string, PresetEnum> _presets = new();
+
+    partial void OnSelectedPicturePathChanged(List<string> value)
+    {
+        if (value.Count != 1)
+        {
+            PresetAvailable = false;
+            return;
+        }
+
+        PresetAvailable = true;
+        if (Presets.ContainsKey(value[0]))
+        {
+            SelectedPreset = Presets[value[0]];
+        }
+        else
+        {
+            SelectedPreset = PresetEnum.None;
+        }
+    }
+
+    partial void OnSelectedPresetChanged(PresetEnum value)
+    {
+        if (SelectedPicturePath.Count != 1) return;
+        var path = SelectedPicturePath[0];
+        if (Presets.ContainsKey(path))
+        {
+            Presets[path] = value;
+        }
+        else
+        {
+            Presets.Add(path, value);
+        }
+    }
 
     [RelayCommand]
     private async Task StartConvertAsync()
@@ -70,14 +114,42 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var results = await Task.WhenAll(tasks);
-        spw.Stop();
+
         Debug.WriteLine("Finished all conversions.");
 
-        foreach (var error in results)
+        foreach (var result in results)
         {
-            if (!string.IsNullOrEmpty(error.Item1) && !string.IsNullOrEmpty(error.Item2))
-                errorDic.Add(error.Item1, error.Item2);
+            if (!string.IsNullOrEmpty(result.Item1) && !string.IsNullOrEmpty(result.Item2))
+            {
+                errorDic.Add(result.Item1, result.Item2);
+            }
         }
+
+        foreach (var path in PicturePaths)
+        {
+            if (!String.IsNullOrEmpty(path) && !errorDic.ContainsKey(path) &&
+                Presets.TryGetValue(path, out PresetEnum preset) && preset != PresetEnum.None)
+            {
+                var outputFile = Path.Combine(OutputDirectory, Path.ChangeExtension(Path.GetFileName(path), ".vtf"));
+                if (File.Exists(outputFile))
+                {
+                    try
+                    {
+                        PresetOpreation.PresetActions[preset](outputFile);
+                    }
+                    catch (Exception e)
+                    {
+                        errorDic.Add(outputFile, $"Preset application failed: \n {e.Message}");
+                    }
+                }
+                else
+                {
+                    errorDic.Add(outputFile, $"Converted file \"{outputFile}\" not found. Preset application skipped.");
+                }
+            }
+        }
+
+        spw.Stop();
 
         var crwvm = new ConvertResultWindowViewModel();
         crwvm.InitInfo(
@@ -101,6 +173,46 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    private async Task SelectInputDirectoryAsync()
+    {
+        var dir = await SelectDirectoryAsync();
+        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+        {
+            var AvailableExtensions = FilePickerFileTypes.ImageAll.Patterns.Select(x => x.TrimStart('*')).ToList();
+            var files = Directory.GetFiles(dir);
+            foreach (var file in files)
+            {
+                var ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
+                if (AvailableExtensions.Contains(ext) && !PicturePaths.Contains(file))
+                {
+                    PicturePaths.Add(file);
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task SelectInputFilesAsync()
+    {
+        var files = await SelectFileAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+        {
+            Title = "选择文件",
+            AllowMultiple = true,
+            FileTypeFilter =
+            [
+                FilePickerFileTypes.ImageAll
+            ]
+        });
+        foreach (var file in files)
+        {
+            if (!PicturePaths.Contains(file))
+            {
+                PicturePaths.Add(file);
+            }
+        }
+    }
+
     private async Task<string> SelectDirectoryAsync()
     {
         var window =
@@ -113,7 +225,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var folders = await storageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
         {
             Title = "选择文件夹",
-            AllowMultiple = false
+            AllowMultiple = false,
         });
         var folder = folders?.FirstOrDefault();
         if (folder == null) return string.Empty;
@@ -125,12 +237,31 @@ public partial class MainWindowViewModel : ViewModelBase
             return path.ToString();
     }
 
+    private async Task<List<string>> SelectFileAsync(FilePickerOpenOptions? filePickerOpenOptions = null)
+    {
+        var window = Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
+            ? desktop.MainWindow
+            : null;
+        if (window == null) return new List<string>();
+        var storageProvider = window.StorageProvider;
+
+        var path = await storageProvider.OpenFilePickerAsync(filePickerOpenOptions ??
+                                                             new Avalonia.Platform.Storage.FilePickerOpenOptions
+                                                             {
+                                                                 Title = "选择文件",
+                                                                 AllowMultiple = true,
+                                                                 FileTypeFilter = new[] { FilePickerFileTypes.All }
+                                                             });
+
+        return path.Select(p => p.TryGetLocalPath()).ToList();
+    }
+
     [RelayCommand]
     private async Task OpenOutputDirectoryAsync()
     {
         await OpenDirectoryAsync(OutputDirectory);
     }
-    
+
     [RelayCommand]
     private async Task OpenItemsDirectoryAsync(IList? paths)
     {
@@ -141,7 +272,7 @@ public partial class MainWindowViewModel : ViewModelBase
             OpenDirectoryAsync(Path.GetDirectoryName(path));
         }
     }
-    
+
     [RelayCommand]
     private async Task DeleteSelectedItemsAsync(IList? paths)
     {
@@ -151,7 +282,25 @@ public partial class MainWindowViewModel : ViewModelBase
         foreach (var path in toRemove)
         {
             PicturePaths.Remove(path);
+            if (Presets.ContainsKey(path))
+            {
+                Presets.Remove(path);
+            }
         }
+    }
+
+    [RelayCommand]
+    private async Task ClearAllItemsAsync()
+    {
+        PicturePaths.Clear();
+        await ResetPresetsAsync();
+    }
+
+    [RelayCommand]
+    private async Task ResetPresetsAsync()
+    {
+        Presets.Clear();
+        SelectedPreset = PresetEnum.None;
     }
 
     private async Task OpenDirectoryAsync(string path)
@@ -203,7 +352,7 @@ public partial class MainWindowViewModel : ViewModelBase
             $" -format {((ImageFormatEnum)SelectedNormalFormatIndex).ToString()} -alphaformat {((ImageFormatEnum)SelectedAlphaFormatIndex).ToString()}");
         sb.Append($" -version {Version}");
         sb.Append(
-            $" -file \"{inputFilePath}\" -output \"{OutputDirectory}\"");
+            $" -file \"{inputFilePath}\" -output \"{OutputDirectory.TrimEnd('\\')}\"");
         Debug.WriteLine(sb.ToString());
         return sb.ToString();
     }
