@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VTFBatcher.Models;
 using VTFBatcher.Enums;
+using VTFBatcher.Utils;
 using VTFBatcher.Views;
 
 namespace VTFBatcher.ViewModels;
@@ -62,6 +63,88 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private PresetEnum _selectedPreset = PresetEnum.None;
     [ObservableProperty] private Dictionary<string, PresetEnum> _presets = new();
 
+    public bool PresetNick
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Nick);
+        set
+        {
+            SelectedPreset = value
+                ? SelectedPreset | PresetEnum.Nick
+                : SelectedPreset & ~PresetEnum.Nick;
+            OnPropertyChanged(nameof(PresetNick));
+        }
+    }
+
+    public bool PresetEllis
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Ellis);
+        set
+        {
+            SelectedPreset = value ? SelectedPreset | PresetEnum.Ellis : SelectedPreset & ~PresetEnum.Ellis;
+            OnPropertyChanged(nameof(PresetEllis));
+        }
+    }
+
+    public bool PresetRochelle
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Rochelle);
+        set
+        {
+            SelectedPreset = value ? SelectedPreset | PresetEnum.Rochelle : SelectedPreset & ~PresetEnum.Rochelle;
+            OnPropertyChanged(nameof(PresetRochelle));
+        }
+    }
+
+    public bool PresetCoach
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Coach);
+        set
+        {
+            SelectedPreset = value ? SelectedPreset | PresetEnum.Coach : SelectedPreset & ~PresetEnum.Coach;
+            OnPropertyChanged(nameof(PresetCoach));
+        }
+    }
+
+    public bool PresetBill
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Bill);
+        set
+        {
+            SelectedPreset = value ? SelectedPreset | PresetEnum.Bill : SelectedPreset & ~PresetEnum.Bill;
+            OnPropertyChanged(nameof(PresetBill));
+        }
+    }
+
+    public bool PresetLouis
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Louis);
+        set
+        {
+            SelectedPreset = value ? SelectedPreset | PresetEnum.Louis : SelectedPreset & ~PresetEnum.Louis;
+            OnPropertyChanged(nameof(PresetLouis));
+        }
+    }
+
+    public bool PresetZoey
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Zoey);
+        set
+        {
+            SelectedPreset = value ? SelectedPreset | PresetEnum.Zoey : SelectedPreset & ~PresetEnum.Zoey;
+            OnPropertyChanged(nameof(PresetZoey));
+        }
+    }
+
+    public bool PresetFrancis
+    {
+        get => SelectedPreset.HasFlag(PresetEnum.Francis);
+        set
+        {
+            SelectedPreset = value ? SelectedPreset | PresetEnum.Francis : SelectedPreset & ~PresetEnum.Francis;
+            OnPropertyChanged(nameof(PresetFrancis));
+        }
+    }
+
     partial void OnSelectedPicturePathChanged(List<string> value)
     {
         if (value.Count != 1)
@@ -93,6 +176,20 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             Presets.Add(path, value);
         }
+
+        RefreshCheckBoxProperties();
+    }
+
+    private void RefreshCheckBoxProperties()
+    {
+        PresetNick = SelectedPreset.HasFlag(PresetEnum.Nick);
+        PresetEllis = SelectedPreset.HasFlag(PresetEnum.Ellis);
+        PresetRochelle = SelectedPreset.HasFlag(PresetEnum.Rochelle);
+        PresetCoach = SelectedPreset.HasFlag(PresetEnum.Coach);
+        PresetBill = SelectedPreset.HasFlag(PresetEnum.Bill);
+        PresetLouis = SelectedPreset.HasFlag(PresetEnum.Louis);
+        PresetZoey = SelectedPreset.HasFlag(PresetEnum.Zoey);
+        PresetFrancis = SelectedPreset.HasFlag(PresetEnum.Francis);
     }
 
     [RelayCommand]
@@ -135,7 +232,10 @@ public partial class MainWindowViewModel : ViewModelBase
                 {
                     try
                     {
-                        PresetOpreation.PresetActions[preset](outputFile);
+                        foreach (var flag in EnumHelper.GetFlags(preset))
+                        {
+                            PresetOpreation.PresetActions[flag](outputFile);
+                        }
                     }
                     catch (Exception e)
                     {

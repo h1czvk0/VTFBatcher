@@ -51,9 +51,9 @@
             <MenuItem Header="File">
                 <MenuItem Header="Import Directory" Command="{Binding SelectInputDirectoryCommand}"></MenuItem>
                 <MenuItem Header="Import Files" Command="{Binding SelectInputFilesCommand}"></MenuItem>
-                <Separator/>
+                <Separator />
                 <MenuItem Header="Clear" Command="{Binding ClearAllItemsCommand}"></MenuItem>
-                <MenuItem Header="Reset Presets" Command="{Binding ResetPresetsCommand}"></MenuItem>
+                <MenuItem Header="Reset All Presets" Command="{Binding ResetPresetsCommand}"></MenuItem>
             </MenuItem>
         </Menu>
 
@@ -70,31 +70,15 @@
                                          IsEnabled="{Binding PresetAvailable}" />
                             <Expander Header="Character VGUI">
                                 <StackPanel IsEnabled="{Binding PresetAvailable}">
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Nick}"
-                                                 Content="Nick" />
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Ellis}"
-                                                 Content="Ellis" />
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Rochelle}"
-                                                 Content="Rochelle" />
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Coach}"
-                                                 Content="Coach" />
+                                    <CheckBox Content="Nick" IsChecked="{Binding PresetNick, Mode=TwoWay}" />
+                                    <CheckBox Content="Ellis" IsChecked="{Binding PresetEllis}" />
+                                    <CheckBox Content="Rochelle" IsChecked="{Binding PresetRochelle}" />
+                                    <CheckBox Content="Coach" IsChecked="{Binding PresetCoach}" />
                                     <Separator HorizontalAlignment="Stretch" />
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Bill}"
-                                                 Content="Bill" />
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Louis}"
-                                                 Content="Louis" />
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Zoey}"
-                                                 Content="Zoey" />
-                                    <RadioButton GroupName="PresetOption"
-                                                 IsChecked="{Binding SelectedPreset, Converter={StaticResource EnumConverter}, Mode=TwoWay, ConverterParameter=Francis}"
-                                                 Content="Francis" />
+                                    <CheckBox Content="Bill" IsChecked="{Binding PresetBill}" />
+                                    <CheckBox Content="Louis" IsChecked="{Binding PresetLouis}" />
+                                    <CheckBox Content="Zoey" IsChecked="{Binding PresetZoey}" />
+                                    <CheckBox Content="Francis" IsChecked="{Binding PresetFrancis}" />
                                 </StackPanel>
                             </Expander>
                         </StackPanel>

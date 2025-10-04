@@ -70,6 +70,6 @@ public static class PresetOpreation
 
         File.Copy(vtffile, Path.Combine(dir, vgui1 + ".vtf"), true);
         File.Copy(vtffile, Path.Combine(dir, vgui2 + ".vtf"), true);
-        File.Move(vtffile, Path.Combine(dir, vgui3 + ".vtf"), true);
+        File.Copy(vtffile, Path.Combine(dir, vgui3 + ".vtf"), true);
     }
 }
