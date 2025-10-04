@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using VTFBatcher.ViewModels;
 using VTFBatcher.Views;
+using VTFBatcher.Utils;
 
 namespace VTFBatcher;
 
@@ -23,9 +24,16 @@ public partial class App : Application
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+            var vm = new MainWindowViewModel();
+            // 加载配置
+            SettingsPersistence.Load(vm);
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = vm,
+            };
+            desktop.Exit += (_, _) =>
+            {
+                SettingsPersistence.Save(vm);
             };
         }
 
