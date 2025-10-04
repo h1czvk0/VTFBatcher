@@ -2,6 +2,8 @@
 ---
 Convert multiple images to VTF format in one click
 ---
+Requires .NET 8.0 Desktop Runtime
+---
 ## Features
 - Basic VTF Conversion Options (Just like VTFEdit but less options)
 - Presets to generate VTFs in certain names (Currently VGUI for characters L4D2)
