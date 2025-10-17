@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace VTFBatcher.Utils;
 
 public static class EnumHelper
 {
-    public static List<T> GetFlags<T>(T input) where T : Enum
+    // 获取按位枚举的所有已选 Flag（AOT 友好版本，添加 struct 约束）
+    public static IEnumerable<T> GetFlags<T>(T value) where T : struct, Enum
     {
-        var result = new List<T>();
-        foreach (T value in Enum.GetValues(typeof(T)))
+        foreach (var flag in Enum.GetValues<T>())
         {
-            if (input.HasFlag(value) && !value.Equals(default(T)))
-            {
-                result.Add(value);
-            }
+            if (!flag.Equals(default(T)) && value.HasFlag(flag))
+                yield return flag;
         }
-        return result;
     }
 }

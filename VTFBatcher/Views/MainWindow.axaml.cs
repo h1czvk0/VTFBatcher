@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using System.Linq;
-using System.Runtime.InteropServices.JavaScript;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Input;
-using VTFBatcher.Enums;
 using VTFBatcher.ViewModels;
 
 namespace VTFBatcher.Views;
@@ -22,124 +16,79 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    private static readonly string[] AvailableExtensions = [".bmp", ".dds", ".gif", ".jpeg", ".jpg", ".png", ".tga"];
-
-    /// <summary>
-    /// 检查拖拽的是否为文件
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void PicturePathListBox_OnDragOver(object? sender, DragEventArgs e)
+    private void NormalPicturePathListBox_DeleteKeyDown(object? sender, KeyEventArgs e)
     {
-        bool allow = false;
-        if (e.Data.Contains(DataFormats.Files) || e.Data.Contains(DataFormats.FileNames))
+        if (e.Key == Key.Delete && sender is ListBox listBox && DataContext is MainWindowViewModel vm)
         {
-            var items = e.Data.GetFiles();
-            if (items != null)
-            {
-                foreach (var item in items)
-                {
-                    var path = item.TryGetLocalPath();
-                    if (!string.IsNullOrWhiteSpace(path))
-                    {
-                        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
-                        if (AvailableExtensions.Contains(ext))
-                        {
-                            allow = true;
-                            break;
-                        }
-                    }
-                }
-                // Parallel.ForEach(items, item =>
-                // {
-                //     var path = item.TryGetLocalPath();
-                //     if (!string.IsNullOrWhiteSpace(path))
-                //     {
-                //         var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
-                //         if (AvailableExtensions.Contains(ext))
-                //         {
-                //             allow = true;
-                //         }
-                //     }
-                // });
-            }
-        }
-
-        e.DragEffects = allow ? DragDropEffects.Copy : DragDropEffects.None;
-        e.Handled = true;
-    }
-
-    private void PicturePathListBox_OnDrop(object? sender, DragEventArgs e)
-    {
-        if (DataContext is not MainWindowViewModel vm)
-        {
-            e.Handled = true;
-            return;
-        }
-
-        var items = e.Data.GetFiles();
-        if (items is not null)
-        {
-            // Stopwatch spw = new();
-            // spw.Start();
-            foreach (var item in items)
-            {
-                var path = item.TryGetLocalPath();
-                if (!string.IsNullOrWhiteSpace(path))
-                {
-                    var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
-                    if (AvailableExtensions.Contains(ext) && !vm.PicturePaths.Contains(path))
-                    {
-                        vm.PicturePaths.Add(path);
-                    }
-                }
-            }
-
-            // ConcurrentBag<string> importedPaths = new();
-            //
-            // Parallel.ForEach(items, item =>
-            // {
-            //     var path = item.TryGetLocalPath();
-            //     if (!string.IsNullOrWhiteSpace(path))
-            //     {
-            //         var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
-            //         if (AvailableExtensions.Contains(ext) && !vm.PicturePaths.Contains(path))
-            //         {
-            //             importedPaths.Add(path);
-            //         }
-            //     }
-            // });
-            // foreach (var path in importedPaths)
-            // {
-            //     vm.PicturePaths.Add(path);
-            // }
-            // spw.Stop();
-            // Debug.WriteLine($"took {spw.ElapsedMilliseconds} ms");
-        }
-
-        e.Handled = true;
-    }
-
-    private void PicturePathListBox_DeleteKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Delete)
-        {
-            PicturePathListBox_DeleteItem();
+            vm.DeleteNormalSelectedItemsCommand.Execute(listBox.SelectedItems);
         }
     }
 
-    private void PicturePathListBox_DeleteItem()
+    private void NormalPicturePathListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (PicturePathListBox.SelectedItems.Count <= 0 || DataContext is not MainWindowViewModel vm) return;
-
-        var selectedItems = PicturePathListBox.SelectedItems.Cast<string>().ToList();
-        vm.DeleteSelectedItemsCommand.Execute(selectedItems);
+        if (sender is ListBox listBox && DataContext is MainWindowViewModel vm)
+        {
+            vm.SelectedNormalPicturePath = listBox.SelectedItems?.Cast<string>().ToList() ?? new List<string>();
+        }
     }
 
-    private void PicturePathListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void NormalPicturePathListBox_OnDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = DragDropEffects.Copy;
+    }
+
+    private void NormalPicturePathListBox_OnDrop(object? sender, DragEventArgs e)
+    {
+        HandleFileDrop(e, true);
+    }
+
+    private void IncapPicturePathListBox_DeleteKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Delete && sender is ListBox listBox && DataContext is MainWindowViewModel vm)
+        {
+            vm.DeleteIncapSelectedItemsCommand.Execute(listBox.SelectedItems);
+        }
+    }
+
+    private void IncapPicturePathListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ListBox listBox && DataContext is MainWindowViewModel vm)
+        {
+            vm.SelectedIncapPicturePath = listBox.SelectedItems?.Cast<string>().ToList() ?? new List<string>();
+        }
+    }
+
+    private void IncapPicturePathListBox_OnDragOver(object? sender, DragEventArgs e)
+    {
+        e.DragEffects = DragDropEffects.Copy;
+    }
+
+    private void IncapPicturePathListBox_OnDrop(object? sender, DragEventArgs e)
+    {
+        HandleFileDrop(e, false);
+    }
+
+    private void HandleFileDrop(DragEventArgs e, bool isNormalTexture)
     {
         if (DataContext is not MainWindowViewModel vm) return;
-        if (sender is not ListBox listBox) return;
-        vm.SelectedPicturePath = new List<string>(listBox.SelectedItems.Cast<string>());
+
+        var files = e.Data.GetFiles();
+        if (files == null) return;
+
+        var availableExtensions = FilePickerFileTypes.ImageAll.Patterns.Select(x => x.TrimStart('*')).ToList();
+        var targetCollection = isNormalTexture ? vm.NormalPicturePaths : vm.IncapPicturePaths;
+
+        foreach (var file in files)
+        {
+            var path = file.TryGetLocalPath();
+            if (!string.IsNullOrEmpty(path))
+            {
+                var ext = Path.GetExtension(path).ToLowerInvariant();
+                if (availableExtensions.Contains(ext) && !targetCollection.Contains(path))
+                {
+                    targetCollection.Add(path);
+                }
+            }
+        }
     }
 }

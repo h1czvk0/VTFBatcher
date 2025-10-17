@@ -1,0 +1,17 @@
+﻿<Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
+	<Application>
+		<!-- 保护整个应用程序集 -->
+		<Assembly Name="VTFBatcher" Serialize="Required All" DataContractSerializer="Required All" DataContractJsonSerializer="Required All" XmlSerializer="Required All" MarshalObject="Required All" MarshalDelegate="Required All" MarshalStructure="Required All" />
+
+		<!-- 保护 Avalonia 核心程序集 -->
+		<Assembly Name="Avalonia" Serialize="Required All" />
+		<Assembly Name="Avalonia.Base" Serialize="Required All" />
+		<Assembly Name="Avalonia.Controls" Serialize="Required All" />
+		<Assembly Name="Avalonia.Desktop" Serialize="Required All" />
+		<Assembly Name="Avalonia.Themes.Fluent" Serialize="Required All" />
+		<Assembly Name="Avalonia.Fonts.Inter" Serialize="Required All" />
+
+		<!-- 保护 CommunityToolkit -->
+		<Assembly Name="CommunityToolkit.Mvvm" Serialize="Required All" />
+	</Application>
+</Directives>

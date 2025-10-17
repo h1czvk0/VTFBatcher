@@ -1,44 +1,89 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
-        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <ApplicationIcon>Assets\VTFBatcher_icon.ico</ApplicationIcon>
-    </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<ApplicationIcon>Assets\VTFBatcher_icon.ico</ApplicationIcon>
 
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\**"/>
-    </ItemGroup>
+		<!-- AOT 发布 -->
+		<PublishAot>true</PublishAot>
+		<SelfContained>true</SelfContained>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
-    <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.3.0"/>
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.0"/>
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0"/>
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0"/>
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.0">
-            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
-            <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
-    </ItemGroup>
+		<!-- AOT 禁用单文件（两者不可并用） -->
+		<PublishSingleFile>false</PublishSingleFile>
 
-    <ItemGroup>
-      <None Update="External\VTFCmd.exe">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="External\VTFLib.dll">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="External\DevIL.dll">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
+		<!-- 体积优先优化 -->
+		<Optimize>true</Optimize>
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+		<TieredCompilation>false</TieredCompilation>
 
-    <ItemGroup>
-      <ClCompile Include="Enums\enumerations.c" />
-    </ItemGroup>
+		<!-- 裁剪：为 AOT 提前保守保留根程序集，避免崩溃 -->
+		<PublishTrimmed>true</PublishTrimmed>
+		<TrimMode>link</TrimMode>
+		<SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+
+		<!-- 进一步瘦身（按需可切换 true/false） -->
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<EventSourceSupport>false</EventSourceSupport>
+		<UseSystemResourceKeys>true</UseSystemResourceKeys>
+		<HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+		<MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+
+		<!-- 静默常见告警（不影响运行） -->
+		<NoWarn>$(NoWarn);CS8602;CS8604;CS8619;CS1998;IL2026;IL3050;IL2057</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.0" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+		<!-- Diagnostics 仅在 Debug 使用，Release 不打包 -->
+		<PackageReference Include="Avalonia.Diagnostics" Version="11.3.0" Condition="'$(Configuration)' == 'Debug'" />
+	</ItemGroup>
+
+	<!-- 保留关键程序集，避免被裁剪 -->
+	<ItemGroup>
+		<TrimmerRootAssembly Include="VTFBatcher" />
+		<TrimmerRootAssembly Include="Avalonia" />
+		<TrimmerRootAssembly Include="Avalonia.Base" />
+		<TrimmerRootAssembly Include="Avalonia.Controls" />
+		<TrimmerRootAssembly Include="Avalonia.Desktop" />
+		<TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
+		<TrimmerRootAssembly Include="Avalonia.Fonts.Inter" />
+		<TrimmerRootAssembly Include="CommunityToolkit.Mvvm" />
+	</ItemGroup>
+
+	<!-- AOT 反射保留配置 -->
+	<ItemGroup>
+		<RdXmlFile Include="rd.xml" />
+	</ItemGroup>
+
+	<!-- 外部执行文件与原生库 -->
+	<ItemGroup>
+		<None Update="External\VTFCmd.exe">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="External\VTFLib.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="External\DevIL.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<!-- 你项目已有：保持 -->
+	<ItemGroup>
+		<ClCompile Include="Enums\enumerations.c" />
+	</ItemGroup>
 </Project>
